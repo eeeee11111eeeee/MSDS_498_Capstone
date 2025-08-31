@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Report: MCP vs. RPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #81B29A;
+        }
+        .tab-btn {
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #3D405B;
+            color: #FFFFFF;
+        }
+        .case-btn {
+            transition: all 0.3s ease;
+        }
+        .case-btn.active {
+            background-color: #81B29A;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Enhanced MCP diagram styles */
+        .mcp-diagram-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .mcp-diagram-inner {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .mcp-title {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .mcp-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .mcp-box {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .mcp-box:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .mcp-user { 
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            animation: pulse-blue 2s infinite;
+        }
+        .mcp-client { 
+            background: linear-gradient(45deg, #43e97b, #38f9d7);
+            animation: pulse-green 2s infinite;
+        }
+        .mcp-protocol { 
+            background: linear-gradient(45deg, #fa709a, #fee140);
+            animation: pulse-pink 2s infinite;
+        }
+        .mcp-server { 
+            background: linear-gradient(45deg, #a8edea, #fed6e3); 
+            color: #333;
+            animation: pulse-teal 2s infinite;
+        }
+
+        @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 8px 16px rgba(79, 172, 254, 0.3); }
+            50% { box-shadow: 0 8px 16px rgba(79, 172, 254, 0.6); }
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 8px 16px rgba(67, 233, 123, 0.3); }
+            50% { box-shadow: 0 8px 16px rgba(67, 233, 123, 0.6); }
+        }
+
+        @keyframes pulse-pink {
+            0%, 100% { box-shadow: 0 8px 16px rgba(250, 112, 154, 0.3); }
+            50% { box-shadow: 0 8px 16px rgba(250, 112, 154, 0.6); }
+        }
+
+        @keyframes pulse-teal {
+            0%, 100% { box-shadow: 0 8px 16px rgba(168, 237, 234, 0.3); }
+            50% { box-shadow: 0 8px 16px rgba(168, 237, 234, 0.6); }
+        }
+
+        .mcp-arrow {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .mcp-tools {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .mcp-tool {
+            background: linear-gradient(45deg, #d299c2, #fef9d7);
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            min-width: 120px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .mcp-tool:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .mcp-explanation {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .mcp-explanation h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .mcp-explanation p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .mcp-explanation p:hover {
+            color: #333;
+        }
+
+        /* Responsive design for mobile */
+        @media (max-width: 768px) {
+            .mcp-flow {
+                gap: 10px;
+            }
+            .mcp-box {
+                min-width: 150px;
+                padding: 15px;
+            }
+            .mcp-tools {
+                gap: 10px;
+            }
+            .mcp-tool {
+                min-width: 100px;
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">MCP vs. RPA Analysis</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#intro" class="nav-link text-gray-600">Introduction</a>
+                <a href="#tech" class="nav-link text-gray-600">Technologies</a>
+                <a href="#comparison" class="nav-link text-gray-600">Comparison</a>
+                <a href="#conclusion" class="nav-link text-gray-600">Conclusion</a>
+                <a href="#references" class="nav-link text-gray-600">References</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="intro" class="text-center mb-20 scroll-mt-20">
+            <h2 class="text-4xl font-bold mb-4">A New Approach to Automation</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                This report analyzes two key automation technologies: Robotic Process Automation (RPA) and the Model Context Protocol (MCP). We explore the challenge of modern automation, where powerful AI models often lack the ability to execute tasks in real-world environments, and how these two different approaches aim to bridge that gap.
+            </p>
+        </section>
+
+        <section id="tech" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Technology Deep Dive</h2>
+                <p class="text-md text-gray-500 mt-2">Click the tabs to learn more about each technology.</p>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-center border-b border-gray-200 mb-6">
+                    <button id="rpa-tab-btn" class="tab-btn active text-lg font-semibold py-3 px-8 rounded-t-lg">RPA</button>
+                    <button id="mcp-tab-btn" class="tab-btn text-lg font-semibold py-3 px-8 rounded-t-lg">MCP</button>
+                </div>
+                <div id="tech-content">
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Case Study Comparison</h2>
+                <p class="text-md text-gray-500 mt-2">
+                    A proof of concept was built using both technologies for four common enterprise use cases. Select a use case below to highlight its data in the chart and view specific details.
+                </p>
+            </div>
+            <div class="flex justify-center flex-wrap gap-3 mb-8">
+                <button class="case-btn active px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-gray-700" data-case="all">All Use Cases</button>
+                <button class="case-btn px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-gray-700" data-case="Search/Upload Files">Search/Upload Files</button>
+                <button class="case-btn px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-gray-700" data-case="Scrape Website & Update Excel">Scrape Website</button>
+                <button class="case-btn px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-gray-700" data-case="Batch Mail Sending">Batch Mail Sending</button>
+                <button class="case-btn px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-gray-700" data-case="Search Mail & Update Google Sheet">Search Mail</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+                <div id="details-panel" class="bg-white p-6 rounded-xl shadow-lg h-full">
+                     <h3 class="font-bold text-xl mb-4 text-center">Use Case Details</h3>
+                     <p class="text-gray-600 text-center">Select a use case to see detailed metrics here.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Conclusion & Future Directions</h2>
+                <p class="text-md text-gray-500 mt-2">Key findings from comparative research analysis.</p>
+            </div>
+            
+            <!-- Strategic Insight -->
+            <div class="max-w-4xl mx-auto mb-8 bg-gradient-to-r from-blue-50 to-teal-50 p-6 rounded-xl shadow-lg">
+                <h3 class="font-bold text-xl mb-3 text-center">Strategic Insight</h3>
+                <p class="text-gray-700 text-center">Automation technology selection must align with specific use case characteristics rather than applying universal solutions. Organizations should develop complementary automation portfolios, strategically deploying both technologies based on specific requirements.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+                <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-400">
+                    <h3 class="font-bold text-xl mb-3">When to Use RPA</h3>
+                    <ul class="text-gray-600 space-y-2">
+                        <li><strong>High-volume, mission-critical processes</strong> requiring centralized governance</li>
+                        <li><strong>Complex enterprise integration</strong> requirements</li>
+                        <li><strong>Superior execution efficiency</strong> (2x faster than MCP)</li>
+                        <li><strong>Professional developer environments</strong> where performance optimization is critical</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-teal-400">
+                    <h3 class="font-bold text-xl mb-3">When to Use MCP</h3>
+                    <ul class="text-gray-600 space-y-2">
+                        <li><strong>Rapid deployment</strong> and user accessibility priorities</li>
+                        <li><strong>Simple automation tasks</strong> with minimal integration complexity</li>
+                        <li><strong>Democratized automation</strong> where business users create workflows</li>
+                        <li><strong>Flexibility and shorter development times</strong> are essential</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Future Directions -->
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-2xl font-bold text-center mb-8">Future Research Directions</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-purple-400">
+                        <h4 class="font-bold text-lg mb-3">Accelerating MCP Thinking Processes</h4>
+                        <p class="text-gray-600 text-sm mb-3">Address the primary performance bottleneck where thinking processes significantly slow execution.</p>
+                        <ul class="text-gray-600 text-sm space-y-1">
+                            <li>• Streamlined decision-making algorithms</li>
+                            <li>• Cached reasoning patterns</li>
+                            <li>• Parallel processing capabilities</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-orange-400">
+                        <h4 class="font-bold text-lg mb-3">Enterprise-Specific MCP Servers</h4>
+                        <p class="text-gray-600 text-sm mb-3">Create frameworks for rapid custom MCP server development tailored to specific enterprise needs.</p>
+                        <ul class="text-gray-600 text-sm space-y-1">
+                            <li>• Standardized integration patterns</li>
+                            <li>• Modular architectures</li>
+                            <li>• Custom enterprise solutions</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-400">
+                        <h4 class="font-bold text-lg mb-3">Hybrid LLM-Automation Integration</h4>
+                        <p class="text-gray-600 text-sm mb-3">Position LLMs as intelligent orchestrators of existing automation infrastructure rather than replacements.</p>
+                        <ul class="text-gray-600 text-sm space-y-1">
+                            <li>• Interface with existing RPA tools</li>
+                            <li>• Coordinate legacy systems</li>
+                            <li>• Combine RPA efficiency with MCP accessibility</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="font-bold text-xl mb-3">Paradigm Shift</h3>
+                    <p class="text-gray-600">This evolution suggests a movement toward <strong>complementary automation portfolios</strong> where organizations strategically deploy both technologies to achieve optimal automation outcomes, balancing RPA's operational efficiency with MCP's flexibility and accessibility.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="references" class="scroll-mt-20 mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">References</h2>
+            </div>
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <ul class="list-none space-y-4 text-gray-600">
+                    <li>Anthropic. "Introducing the Model Context Protocol." November 24, 2024. Accessed July 27, 2025. https://www.anthropic.com/news/model-context-protocol.</li>
+                    <li>Claude. "Claude MCP." Accessed July 27, 2025. https://www.claudemcp.com/.</li>
+                    <li>Claude. "Model Context Protocol Servers." GitHub repository. Accessed July 27, 2025. https://github.com/modelcontextprotocol/servers.</li>
+                    <li>Ehtesham, Abul, Aditi Singh, Gaurav Kumar Gupta, and Saket Kumar. "A Survey of Agent Interoperability Protocols: Model Context Protocol (MCP), Agent Communication Protocol (ACP), Agent-to-Agent Protocol (A2A), and Agent Network Protocol (ANP)." 2025.</li>
+                    <li>JovanoviÄ‡, Stefan Z., Jelena S. ÄuriÄ‡, and Tatjana V. Å ibalija. "Robotic Process Automation: Overview and Opportunities." Faculty of Information Technology, Belgrade Metropolitan University; Deloitte Serbia; Faculty of Management, Belgrade Metropolitan University, 2018.</li>
+                    <li>Karimova, Sevinj, and Ulviya Dadashova. "The Model Context Protocol: A Standardization Analysis for Application Integration." Department of Digital Technologies and Applied Informatics, UNEC, Baku, Azerbaijan, 2025.</li>
+                    <li>Krishnan, Naveen. "Advancing Multi-Agent Systems Through Model Context Protocol: Architecture, Implementation, and Applications." 2025.</li>
+                    <li>Narajala, Vineeth Sai, and Idan Habler. "Enterprise-Grade Security for the Model Context Protocol (MCP): Frameworks and Mitigation Strategies." 2025.</li>
+                    <li>Szeider, Stefan. "MCP-Solver: Integrating Language Models with Constraint Programming Systems." Algorithms and Complexity Group, 2024.</li>
+                    <li>Tornbohm, Cathy, and Rob Dunie. <em>Market Guide for Robotic Process Automation Software</em>. Gartner, 2017.</li>
+                    <li>"The Technical Architecture of UiPath." UiPath Community Forum. Accessed July 27, 2025. https://forum.uipath.com/t/the-technical-architecture-of-uipath/11599/4.</li>
+                    <li>van der Aalst, Wil M. P., Martin Bichler, and Armin Heinzl. <em>Robotic Process Automation</em>. Wiesbaden: Springer Fachmedien Wiesbaden GmbH, 2018.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 mt-12 border-t border-gray-200">
+        <p class="text-gray-500">Interactive Report generated from source data.</p>
+    </footer>
+
+    <script>
+        const techData = {
+            rpa: {
+                title: 'Robotic Process Automation (RPA)',
+                content: `
+                    <p class="text-gray-600 mb-4">A powerful tool for automating repetitive, rule-based processes by mimicking human interactions with user interfaces (UI). It excels at tasks like data entry but is brittle and can break with minor UI changes.</p>
+                    <h4 class="font-semibold mb-2">Pros:</h4>
+                    <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
+                        <li>Superior execution speed & high accuracy for structured tasks.</li>
+                        <li>Excellent integration with existing enterprise systems.</li>
+                        <li>Consistent and robust for high-volume scenarios.</li>
+                    </ul>
+                    <h4 class="font-semibold mb-2">Cons:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li>Significant upfront costs and longer implementation periods.</li>
+                        <li>Reduced flexibility to process changes.</li>
+                        <li>Requires specialized expertise and maintenance teams.</li>
+                    </ul>
+                `
+            },
+            mcp: {
+                title: 'Model Context Protocol (MCP)',
+                content: `
+                    <p class="text-gray-600 mb-4">A standardized framework that enables AI systems to interact with external data sources and computational tools seamlessly in real-time. It acts as a unified interface for tool invocation and contextual data exchange, empowering AI to execute tasks.</p>
+                    <div class="mt-6 mb-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold text-xl mb-2">The Role of the MCP Server</h4>
+                        <p class="text-gray-600 text-sm">The **MCP Server** is the critical translator component of the protocol. Its primary role is to serve as an adapter between the AI client and an external system, such as a legacy application or a database. It receives a structured request from the client and handles the complex, system-specific logic to perform the requested action (e.g., retrieving a record, filling out a form, executing a command). It then translates the system's response into a standardized format that the MCP client can easily consume, abstracting away the underlying complexity and making the automation more robust and less dependent on fragile UI interactions.</p>
+                    </div>
+                    
+                    <!-- Enhanced MCP Architecture Diagram -->
+                    <div class="mcp-diagram-container">
+                        <div class="mcp-diagram-inner">
+                            <div class="mcp-title">🔗 MCP (Model Context Protocol) Architecture</div>
+                            
+                            <div class="mcp-flow">
+                                <div class="mcp-box mcp-user">👤<br>User<br><small>Makes requests</small></div>
+                                <div class="mcp-arrow">↓</div>
+                                <div class="mcp-box mcp-client">🤖<br>MCP Client<br><small>(AI Assistant)</small></div>
+                                <div class="mcp-arrow">⇅</div>
+                                <div class="mcp-box mcp-protocol">📡<br>MCP Protocol<br><small>(Communication Layer)</small></div>
+                                <div class="mcp-arrow">⇅</div>
+                                <div class="mcp-box mcp-server">⚙️<br>MCP Server<br><small>(Tools & Data Access)</small></div>
+                            </div>
+
+                            <div class="mcp-tools">
+                                <div class="mcp-tool">📁<br>File System</div>
+                                <div class="mcp-tool">🌐<br>Web APIs</div>
+                                <div class="mcp-tool">🗄️<br>Databases</div>
+                                <div class="mcp-tool">📊<br>Analytics</div>
+                            </div>
+
+                            <div class="mcp-explanation">
+                                <h3>🔄 How MCP Works:</h3>
+                                <p><strong>1. User Request:</strong> You ask the AI assistant to perform a specific task</p>
+                                <p><strong>2. AI Processing:</strong> The MCP Client (AI) analyzes the request and determines what tools it needs</p>
+                                <p><strong>3. Secure Communication:</strong> The MCP Protocol safely connects the AI to the appropriate server</p>
+                                <p><strong>4. Tool Execution:</strong> The MCP Server performs actions like reading files, calling APIs, or querying databases</p>
+                                <p><strong>5. Results Delivery:</strong> Information flows back to you through the AI assistant with a complete response</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of Enhanced MCP Diagram -->
+                    
+                    <h4 class="font-semibold mb-2">Pros:</h4>
+                    <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
+                        <li>Faster implementation times and a lower technical barrier to entry.</li>
+                        <li>Greater flexibility in handling process variations.</li>
+                        <li>Adaptable to changing requirements and cost-effective.</li>
+                    </ul>
+                    <h4 class="font-semibold mb-2">Cons:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li>Slower execution times compared to RPA.</li>
+                        <li>May have lower accuracy rates in some structured processes.</li>
+                        <li>Less suitable for high-volume, repetitive tasks.</li>
+                    </ul>
+                `
+            }
+        };
+
+        const caseStudyData = [
+            { case: "Search/Upload Files", method: "RPA", cycleTime: 5 * 60, devPeriod: 2 * 60, accuracy: 100 },
+            { case: "Search/Upload Files", method: "MCP", cycleTime: 12 * 60, devPeriod: 24 * 60, accuracy: 95 },
+            { case: "Scrape Website & Update Excel", method: "RPA", cycleTime: 15, devPeriod: 40, accuracy: 100 },
+            { case: "Scrape Website & Update Excel", method: "MCP", cycleTime: 4 * 60, devPeriod: 30, accuracy: 100 },
+            { case: "Batch Mail Sending", method: "RPA", cycleTime: 60, devPeriod: 15, accuracy: 100 },
+            { case: "Batch Mail Sending", method: "MCP", cycleTime: 60, devPeriod: 4 * 60, accuracy: 100 },
+            { case: "Search Mail & Update Google Sheet", method: "RPA", cycleTime: 10, devPeriod: 20, accuracy: 100 },
+            { case: "Search Mail & Update Google Sheet", method: "MCP", cycleTime: 60, devPeriod: 4 * 60, accuracy: 100 }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const techContentEl = document.getElementById('tech-content');
+            const rpaTabBtn = document.getElementById('rpa-tab-btn');
+            const mcpTabBtn = document.getElementById('mcp-tab-btn');
+
+            function renderTechContent(tech) {
+                techContentEl.innerHTML = `
+                    <div class="bg-white p-8 rounded-xl shadow-lg transition-opacity duration-500">
+                        <h3 class="font-bold text-2xl mb-4">${techData[tech].title}</h3>
+                        ${techData[tech].content}
+                    </div>
+                `;
+            }
+
+            rpaTabBtn.addEventListener('click', () => {
+                renderTechContent('rpa');
+                rpaTabBtn.classList.add('active');
+                mcpTabBtn.classList.remove('active');
+            });
+
+            mcpTabBtn.addEventListener('click', () => {
+                renderTechContent('mcp');
+                mcpTabBtn.classList.add('active');
+                rpaTabBtn.classList.remove('active');
+            });
+
+            renderTechContent('rpa');
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            const labels = [...new Set(caseStudyData.map(d => d.case))];
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.map(label => label.replace(' & Update Excel', '').replace(' & Update Google Sheet', '')),
+                    datasets: [
+                        {
+                            label: 'RPA Dev Period (mins)',
+                            data: caseStudyData.filter(d => d.method === 'RPA').map(d => d.devPeriod),
+                            backgroundColor: 'rgba(93, 138, 168, 0.7)',
+                            borderColor: 'rgba(93, 138, 168, 1)',
+                            borderWidth: 1,
+                            stack: 'dev'
+                        },
+                        {
+                            label: 'MCP Dev Period (mins)',
+                            data: caseStudyData.filter(d => d.method === 'MCP').map(d => d.devPeriod),
+                            backgroundColor: 'rgba(129, 178, 154, 0.7)',
+                            borderColor: 'rgba(129, 178, 154, 1)',
+                            borderWidth: 1,
+                            stack: 'dev'
+                        },
+                        {
+                            label: 'RPA Cycle Time (sec)',
+                            data: caseStudyData.filter(d => d.method === 'RPA').map(d => d.cycleTime),
+                            backgroundColor: 'rgba(93, 138, 168, 1)',
+                            borderColor: 'rgba(93, 138, 168, 1)',
+                            borderWidth: 1,
+                            stack: 'cycle'
+                        },
+                        {
+                            label: 'MCP Cycle Time (sec)',
+                            data: caseStudyData.filter(d => d.method === 'MCP').map(d => d.cycleTime),
+                            backgroundColor: 'rgba(129, 178, 154, 1)',
+                            borderColor: 'rgba(129, 178, 154, 1)',
+                            borderWidth: 1,
+                            stack: 'cycle'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Development Period (mins) vs. Process Cycle Time (sec)',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        let value = context.parsed.y;
+                                        if (label.includes('Period')) {
+                                            label += `${value} mins`;
+                                        } else {
+                                            label += `${value} sec`;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Time (Log Scale)'
+                            }
+                        },
+                        x: {
+                           ticks: {
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 15 ? label.substring(0, 15) + '...' : label;
+                                }
+                           }
+                        }
+                    }
+                }
+            });
+            
+            const caseButtons = document.querySelectorAll('.case-btn');
+            const detailsPanel = document.getElementById('details-panel');
+
+            function updateDetails(selectedCase) {
+                if (selectedCase === 'all') {
+                    detailsPanel.innerHTML = `
+                        <h3 class="font-bold text-xl mb-4 text-center">Use Case Details</h3>
+                        <p class="text-gray-600 text-center">Displaying data for all use cases. Select a specific one to see detailed metrics.</p>
+                    `;
+                    return;
+                }
+                
+                const rpaData = caseStudyData.find(d => d.case === selectedCase && d.method === 'RPA');
+                const mcpData = caseStudyData.find(d => d.case === selectedCase && d.method === 'MCP');
+
+                detailsPanel.innerHTML = `
+                    <h3 class="font-bold text-xl mb-4 text-center">${selectedCase}</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">RPA Metrics</h4>
+                            <ul class="mt-2 text-sm text-blue-700">
+                                <li><strong>Cycle Time:</strong> ${rpaData.cycleTime / 60 > 1 ? (rpaData.cycleTime / 60).toFixed(1) + ' mins' : rpaData.cycleTime + ' secs'}</li>
+                                <li><strong>Dev Period:</strong> ${rpaData.devPeriod / 60 > 1 ? (rpaData.devPeriod / 60).toFixed(1) + ' hours' : rpaData.devPeriod + ' mins'}</li>
+                                <li><strong>Accuracy:</strong> ${rpaData.accuracy}%</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-teal-50 rounded-lg">
+                            <h4 class="font-semibold text-teal-800">MCP Metrics</h4>
+                            <ul class="mt-2 text-sm text-teal-700">
+                                <li><strong>Cycle Time:</strong> ${mcpData.cycleTime / 60 > 1 ? (mcpData.cycleTime / 60).toFixed(1) + ' mins' : mcpData.cycleTime + ' secs'}</li>
+                                <li><strong>Dev Period:</strong> ${mcpData.devPeriod / 60 > 1 ? (mcpData.devPeriod / 60).toFixed(1) + ' hours' : mcpData.devPeriod + ' mins'}</li>
+                                <li><strong>Accuracy:</strong> ${mcpData.accuracy}%</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            caseButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    caseButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const selectedCase = button.dataset.case;
+                    updateDetails(selectedCase);
+
+                    chart.data.datasets.forEach(dataset => {
+                        const originalColor = dataset.backgroundColor.map ? dataset.backgroundColor[0].replace(/, 0.7\)$/,', 0.2)') : dataset.backgroundColor.replace(/, 0.7\)$/,', 0.2)');
+                        const originalBorder = dataset.borderColor.map ? dataset.borderColor[0].replace(/, 1\)$/,', 0.2)') : dataset.borderColor.replace(/, 1\)$/,', 0.2)');
+                        dataset.backgroundColor = Array(chart.data.labels.length).fill(originalColor);
+                        dataset.borderColor = Array(chart.data.labels.length).fill(originalBorder);
+                    });
+
+                    if (selectedCase !== 'all') {
+                        const caseIndex = chart.data.labels.findIndex(label => label.includes(selectedCase.substring(0,10)));
+                        if (caseIndex > -1) {
+                            chart.data.datasets.forEach(dataset => {
+                                const activeColor = dataset.label.includes('RPA') ? 'rgba(93, 138, 168, 0.7)' : 'rgba(129, 178, 154, 0.7)';
+                                const activeBorder = dataset.label.includes('RPA') ? 'rgba(93, 138, 168, 1)' : 'rgba(129, 178, 154, 1)';
+                                const newColors = Array(chart.data.labels.length).fill('rgba(93, 138, 168, 0.2)');
+                                const newBorders = Array(chart.data.labels.length).fill('rgba(93, 138, 168, 0.2)');
+                                newColors[caseIndex] = activeColor;
+                                newBorders[caseIndex] = activeBorder;
+                                dataset.backgroundColor = newColors;
+                                dataset.borderColor = newBorders;
+
+                                if (dataset.label.includes('Cycle Time')) {
+                                    const cycleColor = dataset.label.includes('RPA') ? 'rgba(93, 138, 168, 1)' : 'rgba(129, 178, 154, 1)';
+                                    dataset.backgroundColor[caseIndex] = cycleColor;
+                                    dataset.borderColor[caseIndex] = cycleColor;
+                                }
+                            });
+                        }
+                    } else {
+                         chart.data.datasets[0].backgroundColor = 'rgba(93, 138, 168, 0.7)';
+                         chart.data.datasets[0].borderColor = 'rgba(93, 138, 168, 1)';
+                         chart.data.datasets[1].backgroundColor = 'rgba(129, 178, 154, 0.7)';
+                         chart.data.datasets[1].borderColor = 'rgba(129, 178, 154, 1)';
+                         chart.data.datasets[2].backgroundColor = 'rgba(93, 138, 168, 1)';
+                         chart.data.datasets[2].borderColor = 'rgba(93, 138, 168, 1)';
+                         chart.data.datasets[3].backgroundColor = 'rgba(129, 178, 154, 1)';
+                         chart.data.datasets[3].borderColor = 'rgba(129, 178, 154, 1)';
+                    }
+                    chart.update();
+                });
+            });
+            
+            updateDetails('all');
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
